@@ -1,1 +1,1 @@
-java -Dsun.java2d.d3d=false code.TriangleGraphicsDemo
+java -Dsun.java2d.d3d=false a1.TriangleGraphicsDemo

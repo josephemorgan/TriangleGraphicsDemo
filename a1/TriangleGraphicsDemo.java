@@ -1,4 +1,4 @@
-package code;
+package a1;
 
 import javax.swing.*;
 import static com.jogamp.opengl.GL4.*;
@@ -164,7 +164,7 @@ public class TriangleGraphicsDemo extends JFrame implements GLEventListener, Key
 	@Override
 	public void init(GLAutoDrawable drawable) {
 		GL4 gl = (GL4) GLContext.getCurrentGL();
-		renderingProgram = Utils.createShaderProgram("code/vertShader.glsl", "code/fragShader.glsl");
+		renderingProgram = Utils.createShaderProgram("a1/vertShader.glsl", "a1/fragShader.glsl");
 		Utils.printProgramLog(renderingProgram);
 		gl.glGenVertexArrays(vao.length, vao, 0);
 		gl.glBindVertexArray(vao[0]);
