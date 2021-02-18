@@ -9,61 +9,60 @@ import com.jogamp.opengl.GLContext;
 import com.jogamp.opengl.util.*;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
 
 
-public class Code extends JFrame implements GLEventListener {
+/**
+ * A .
+ */
+public class TriangleGraphicsDemo extends JFrame implements GLEventListener, KeyListener, MouseWheelListener {
 	private int renderingProgram;
-	private int vao[] = new int[1];
-	private int vbo[] = new int[1];
+	private final int[] vao = new int[1];
+	private final int[] vbo = new int[1];
 	private float xOffset = 0.0f;
 	private float yOffset = 0.0f;
 	private float inc = 0.01f;
 	private float theta = 0;
+	private float scaleFactor = 1;
 	private boolean moveHorizontalMode;
 	private boolean moveVerticalMode;
 	private boolean moveCircularMode;
 	private boolean isGradientEnabled;
 	private long lastFrameTimeMillis;
 
-	private GLCanvas myCanvas;
-	private JPanel renderingPanel;
-	private JPanel buttonPanel;
+	private GLCanvas renderingCanvas;
 	private JButton moveHorizontalButton;
 	private JButton moveVerticalButton;
 	private JButton moveCircularButton;
-	private JButton toggleGradientEnabledButton;
-	private JButton keyInfoButton;
 
-	public Code() {
+	public TriangleGraphicsDemo() {
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		moveHorizontalMode = true;
 		moveVerticalMode = false;
 		moveCircularMode = false;
 		isGradientEnabled = false;
-
 		buildWindow();
+		renderingCanvas.setFocusable(true);
+		renderingCanvas.requestFocus();
 	}
 
 	private void buildWindow() {
 		setTitle("Homework 1");
 		setSize(400, 400);
 
-		myCanvas = new GLCanvas();
-		renderingPanel = new JPanel(new BorderLayout());
-		buttonPanel = new JPanel(new GridBagLayout());
+		renderingCanvas = new GLCanvas();
+		JPanel renderingPanel = new JPanel(new BorderLayout());
+		JPanel buttonPanel = new JPanel(new GridBagLayout());
 		buttonPanel.setBorder(BorderFactory.createLineBorder(Color.red));
 		moveHorizontalButton = new JButton("Move Horizontally");
 		moveVerticalButton = new JButton("Move Vertically");
 		moveCircularButton = new JButton("Move Circularly");
-		toggleGradientEnabledButton = new JButton("Toggle Color");
-		keyInfoButton = new JButton("?");
+		JButton toggleGradientEnabledButton = new JButton("Toggle Color");
+		JButton keyInfoButton = new JButton("?");
 		GridBagConstraints constraints = new GridBagConstraints();
 
-		renderingPanel.add(myCanvas);
+		renderingPanel.add(renderingCanvas);
+		this.add(BorderLayout.CENTER, renderingCanvas);
 
 		constraints.fill = GridBagConstraints.BOTH;
 		constraints.weightx = 1.0f;
@@ -98,73 +97,28 @@ public class Code extends JFrame implements GLEventListener {
 		moveVerticalButton.setEnabled(!moveVerticalMode);
 		moveHorizontalButton.setEnabled(!moveHorizontalMode);
 		moveCircularButton.setEnabled(!moveCircularMode);
-		myCanvas.addGLEventListener(this);
+		renderingCanvas.addGLEventListener(this);
 
 		setLayout(new BorderLayout());
-		add(BorderLayout.CENTER, renderingPanel);
+		add(BorderLayout.CENTER, renderingCanvas);
 		add(BorderLayout.SOUTH, buttonPanel);
 
-		myCanvas.addKeyListener(new KeyListener() {
-			@Override
-			public void keyTyped(KeyEvent e) {
-			}
+		this.addMouseWheelListener(this);
+		renderingCanvas.addKeyListener(this);
+		moveHorizontalButton.addActionListener(e -> enableMoveHorizontalMode());
 
-			@Override
-			public void keyPressed(KeyEvent e) {
-			}
+		moveVerticalButton.addActionListener(e -> enableMoveVerticalMode());
 
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.getKeyChar() == 'h') {
-				    enableMoveHorizontalMode();
-				} else if (e.getKeyChar() == 'v') {
-					enableMoveVerticalMode();
-				} else if (e.getKeyChar() == 'c') {
-					enableMoveCircularMode();
-				} else if (e.getKeyChar() == 'o') {
-					toggleGradientEnabled();
-				}
-			}
-		});
+		moveCircularButton.addActionListener(e -> enableMoveCircularMode());
 
-		moveHorizontalButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-			    enableMoveHorizontalMode();
-			}
-		});
+		toggleGradientEnabledButton.addActionListener(e -> toggleGradientEnabled());
 
-		moveVerticalButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				enableMoveVerticalMode();
-			}
-		});
-
-		moveCircularButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-			    enableMoveCircularMode();
-			}
-		});
-
-		toggleGradientEnabledButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-			    toggleGradientEnabled();
-			}
-		});
-
-		keyInfoButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				showHelp();
-			}
-		});
+		keyInfoButton.addActionListener(e -> showHelp());
 
 		setVisible(true);
-		Animator animator = new Animator(myCanvas);
+		Animator animator = new Animator(renderingCanvas);
 		animator.start();
+		pack();
 	}
 
 	private void enableMoveHorizontalMode() {
@@ -211,10 +165,13 @@ public class Code extends JFrame implements GLEventListener {
 	public void init(GLAutoDrawable drawable) {
 		GL4 gl = (GL4) GLContext.getCurrentGL();
 		renderingProgram = Utils.createShaderProgram("code/vertShader.glsl", "code/fragShader.glsl");
+		Utils.printProgramLog(renderingProgram);
 		gl.glGenVertexArrays(vao.length, vao, 0);
 		gl.glBindVertexArray(vao[0]);
 		gl.glGenBuffers(1, vbo, 0);
 		lastFrameTimeMillis = System.currentTimeMillis();
+		System.out.println("GL Version: " + gl.glGetString(GL_VERSION));
+		System.out.println("JOGL Version: " + getClass().getClassLoader().getDefinedPackage("com.jogamp.opengl").getImplementationVersion());
 	}
 
 	@Override
@@ -224,14 +181,20 @@ public class Code extends JFrame implements GLEventListener {
 		gl.glClear(GL_DEPTH_BUFFER_BIT);
 		gl.glUseProgram(renderingProgram);
 		moveObject(gl);
+
+		int scale_factor_ptr = gl.glGetUniformLocation(renderingProgram, "scale_factor");
+		gl.glProgramUniform1f(renderingProgram, scale_factor_ptr, scaleFactor);
 		gl.glDrawArrays(GL_TRIANGLES,0,3);
+		if (Utils.checkOpenGLError()) {
+			Utils.printProgramLog(renderingProgram);
+		}
 	}
 
 	private void moveObject(GL4 gl) {
 		long currentTimeMillis = System.currentTimeMillis();
 		long elapsedTimeMillis = currentTimeMillis - lastFrameTimeMillis;
 		lastFrameTimeMillis = currentTimeMillis;
-		long timeFactor = elapsedTimeMillis / 10l;
+		long timeFactor = elapsedTimeMillis / 10L;
 		if (moveHorizontalMode) {
 			moveHorizontally(gl, timeFactor);
 		} else if (moveVerticalMode) {
@@ -285,12 +248,41 @@ public class Code extends JFrame implements GLEventListener {
 		theta += inc * timeFactor;
 	}
 
-	public static void main(String[] args) {
-		new Code();
-	}
-
 	@Override
 	public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {}
 	@Override
 	public void dispose(GLAutoDrawable drawable) {}
+
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent e) {
+		int notches = e.getWheelRotation();
+		if (notches < 0) {
+		    scaleFactor -= 0.1;
+		} else {
+			scaleFactor += 0.1;
+		}
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		if (e.getKeyChar() == 'h') {
+			enableMoveHorizontalMode();
+		} else if (e.getKeyChar() == 'v') {
+			enableMoveVerticalMode();
+		} else if (e.getKeyChar() == 'c') {
+			enableMoveCircularMode();
+		} else if (e.getKeyChar() == 'o') {
+			toggleGradientEnabled();
+		}
+	}
 }
