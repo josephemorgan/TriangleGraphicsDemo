@@ -11,10 +11,6 @@ import com.jogamp.opengl.util.*;
 import java.awt.*;
 import java.awt.event.*;
 
-
-/**
- * A .
- */
 public class TriangleGraphicsDemo extends JFrame implements GLEventListener, KeyListener, MouseWheelListener {
 	private int renderingProgram;
 	private final int[] vao = new int[1];
@@ -105,6 +101,7 @@ public class TriangleGraphicsDemo extends JFrame implements GLEventListener, Key
 
 		this.addMouseWheelListener(this);
 		renderingCanvas.addKeyListener(this);
+		buttonPanel.addKeyListener(this);
 		moveHorizontalButton.addActionListener(e -> enableMoveHorizontalMode());
 
 		moveVerticalButton.addActionListener(e -> enableMoveVerticalMode());
@@ -157,7 +154,8 @@ public class TriangleGraphicsDemo extends JFrame implements GLEventListener, Key
 				"h - Switch to Horizontal Movement Mode\n" +
 				"v - Switch to Vertical Movement Mode\n" +
 				"c - Switch to Circular Movement Mode\n" +
-				"o - Toggle between solid and gradient color";
+				"o - Toggle between solid and gradient color\n" +
+				"Additionally, use of scroll wheel scales triangle size.";
 	    JOptionPane.showMessageDialog(this, helpString);
 	}
 
@@ -171,7 +169,7 @@ public class TriangleGraphicsDemo extends JFrame implements GLEventListener, Key
 		gl.glGenBuffers(1, vbo, 0);
 		lastFrameTimeMillis = System.currentTimeMillis();
 		System.out.println("GL Version: " + gl.glGetString(GL_VERSION));
-		System.out.println("JOGL Version: " + getClass().getClassLoader().getDefinedPackage("com.jogamp.opengl").getImplementationVersion());
+		System.out.println("JOGL Version: " + Package.getPackage("com.jogamp.opengl").getImplementationVersion());
 	}
 
 	@Override
